@@ -6,13 +6,10 @@ cursor = conn.cursor()
 
 # Create tables
 cursor.execute('''
-CREATE TABLE IF NOT EXISTS cards (
-    id INTEGER PRIMARY KEY,
-    name TEXT NOT NULL,
-    rarity TEXT NOT NULL,
-    attack INTEGER,
-    defense INTEGER
-)
+INSERT INTO cards (card_name, rarity, date_of_pull)
+VALUES
+    ('Pikachu', 'common', '2025-01-01'),
+    ('Charizard', 'rare', '2025-01-02')
 ''')
 
 conn.commit()
