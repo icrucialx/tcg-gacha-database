@@ -78,6 +78,26 @@ app.get('/pulls', (req, res) => {
   });
 });
 
+app.get('/collection/:user_id', (req, res) => {
+    const { user_id } = req.params;
+
+    const query = `
+        SELECT DISTINCT card_name, rarity
+        FROM pulls
+        WHERE user_id = ?
+        ORDER BY rarity DESC, card_name ASC
+    `;
+
+    db.all(query, [user_id], (err, rows) => {
+        if (err) {
+            console.error('Error fetching collection:', err.message);
+            return res.status(500).json({ error: 'Failed to fetch collection' });
+        }
+
+        res.json(rows);
+    });
+});
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
