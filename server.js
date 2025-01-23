@@ -46,23 +46,23 @@ app.get('/', (req, res) => {
 
 // API endpoint to log a card pull
 app.post('/pulls', (req, res) => {
-  const { card_name, rarity } = req.body;
+    const { user_id, card_name, rarity } = req.body;
 
-  if (!card_name || !rarity) {
-    return res.status(400).json({ error: 'card_name and rarity are required' });
-  }
-
-  const date_of_pull = new Date().toISOString();
-
-  const query = `INSERT INTO pulls (card_name, rarity, date_of_pull) VALUES (?, ?, ?)`;
-  db.run(query, [card_name, rarity, date_of_pull], function (err) {
-    if (err) {
-      console.error('Error inserting data:', err.message);
-      return res.status(500).json({ error: 'Failed to log pull' });
+    if (!user_id || !card_name || !rarity) {
+        return res.status(400).json({ error: 'user_id, card_name, and rarity are required' });
     }
 
-    res.status(201).json({ status: 'success', id: this.lastID });
-  });
+    const date_of_pull = new Date().toISOString();
+    const query = `INSERT INTO pulls (user_id, card_name, rarity, date_of_pull) VALUES (?, ?, ?, ?)`;
+
+    db.run(query, [user_id, card_name, rarity, date_of_pull], function (err) {
+        if (err) {
+            console.error('Error inserting data:', err.message);
+            return res.status(500).json({ error: 'Failed to log pull' });
+        }
+
+        res.status(201).json({ status: 'success', id: this.lastID });
+    });
 });
 
 // API endpoint to fetch all pulls
