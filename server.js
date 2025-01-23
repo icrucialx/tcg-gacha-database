@@ -1,7 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -37,7 +36,7 @@ db.run(
 
 // Home route
 app.get('/', (req, res) => {
-  res.send('Hello World! Your app is running!');
+  res.send('Hello World! The Node.js backend is running!');
 });
 
 // API endpoint to log a card pull
@@ -61,7 +60,7 @@ app.post('/pulls', (req, res) => {
   });
 });
 
-// API endpoint to fetch all pulls (optional, for debugging)
+// API endpoint to fetch all pulls
 app.get('/pulls', (req, res) => {
   const query = `SELECT * FROM pulls`;
   db.all(query, [], (err, rows) => {
