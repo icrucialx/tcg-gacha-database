@@ -23,10 +23,6 @@ jobs:
         with:
           python-version: "3.x"
 
-      # Install dependencies (if any)
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-
       # Run the SQLite3 script
       - name: Run initialization script
         run: python initialize_db.py
