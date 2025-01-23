@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
 
@@ -6,6 +7,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware to parse JSON bodies
+app.use(cors({
+    origin: 'https://icrucialx.github.io' // Allow requests from your frontend domain
+}));
 app.use(bodyParser.json());
 
 // Initialize SQLite database
