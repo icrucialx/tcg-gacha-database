@@ -23,19 +23,20 @@ const db = new sqlite3.Database('tcg-gacha.db', (err) => {
 
 // Create `pulls` table if it doesn't exist
 db.run(
-  `CREATE TABLE IF NOT EXISTS pulls (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    card_name TEXT NOT NULL,
-    rarity TEXT NOT NULL,
-    date_of_pull TEXT NOT NULL
-  )`,
-  (err) => {
-    if (err) {
-      console.error('Error creating table:', err.message);
-    } else {
-      console.log('Ensured the "pulls" table exists.');
+    `CREATE TABLE IF NOT EXISTS pulls (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        card_name TEXT NOT NULL,
+        rarity TEXT NOT NULL,
+        date_of_pull TEXT NOT NULL
+    )`,
+    (err) => {
+        if (err) {
+            console.error('Error creating table:', err.message);
+        } else {
+            console.log('Ensured the "pulls" table exists with user_id.');
+        }
     }
-  }
 );
 
 // Home route
