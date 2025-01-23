@@ -16,7 +16,5 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: '3.x'
-    - name: Install dependencies
-      run: pip install sqlite3
     - name: Run tests
       run: python query_cards.py
