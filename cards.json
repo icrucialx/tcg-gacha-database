@@ -1,0 +1,73 @@
+{
+  "common": [
+    "Pidgey", "Rattata", "Zubat", "Caterpie", "Weedle", "Spearow", "Sandshrew", 
+    "Poliwag", "Geodude", "Krabby", "Oddish", "Paras", "Diglett", "Ekans", 
+    "NidoranF", "NidoranM", "Magnemite", "Meowth", "Pikachu", "Voltorb", 
+    "Poliwhirl", "Bellsprout", "Tentacool", "Slowpoke", "Shellder", "Drowzee", 
+    "Krabby", "Horsea", "Staryu", "Doduo", "Seel", "Grimer", "Koffing", 
+    "Rhyhorn", "Cubone", "Lickitung", "Tangela", "Kangaskhan", "Ponyta", 
+    "Magnemite", "Goldeen", "Staryu", "Exeggcute", "Cleffa", "Igglybuff", 
+    "Togepi", "Hoothoot", "Sentret", "Wooper", "Mareep", "Slugma", "Snubbull", 
+    "Remoraid", "Swinub", "Phanpy", "Seedot", "Lotad", "Shroomish", "Wingull", 
+    "Surskit", "Baltoy", "Barboach", "Electrike", "Spoink", "Numel", 
+    "Cacnea", "Snorunt", "Meditite", "Swablu", "Spheal", "Clamperl", 
+    "Shuppet", "Duskull", "Chimecho", "Gulpin", "Trapinch", "Cranidos", 
+    "Shieldon", "Combee", "Cherubi", "Buizel", "Bidoof", "Kricketot", 
+    "Shellos", "Croagunk", "Bronzor", "Happiny", "Chatot", "Spiritomb", 
+    "Gible", "Glameow", "Purrloin", "Pidove", "Drilbur", "Timburr", "Venipede", 
+    "Dwebble", "Scraggy", "Foongus"
+  ],
+  "uncommon": [
+    "Butterfree", "Beedrill", "Pidgeotto", "Raticate", "Fearow", "Clefairy", 
+    "Jigglypuff", "Golbat", "Gloom", "Venonat", "Dugtrio", "Persian", "Goldeen", 
+    "Seaking", "Primeape", "Growlithe", "Machoke", "Kadabra", "Haunter", 
+    "Wartortle", "Charmeleon", "Ivysaur", "Flaaffy", "Bayleef", "Quilava", 
+    "Noctowl", "Ariados", "Ledian", "Xatu", "Murkrow", "Piloswine", "Corsola", 
+    "Misdreavus", "Girafarig", "Delibird", "Sneasel", "Donphan", "Lanturn", 
+    "Mantine", "Sunflora", "Houndour", "Skiploom", "Pupitar", "Lombre", 
+    "Nuzleaf", "Swellow", "Masquerain", "Pelipper", "Breloom", "Vibrava", 
+    "Roselia", "Whiscash", "Camerupt", "Manectric", "Banette", "Dusclops", 
+    "Tropius", "Lunatone", "Solrock", "Sealeo", "Huntail", "Gorebyss", 
+    "Luvdisc", "Shelgon", "Gabite", "Staravia", "Luxio", "Monferno", "Prinplup", 
+    "Grotle", "Bibarel", "Pachirisu", "Drifloon", "Mismagius", "Honchkrow", 
+    "Hippopotas", "Skuntank", "Finneon", "Mantyke", "Snover", "Gabite", 
+    "Froslass", "Servine", "Dewott", "Pignite", "Tranquill", "Watchog", 
+    "Boldore", "Swoobat", "Zebstrika", "Palpitoad", "Whirlipede", "Swadloon", 
+    "Whimsicott", "Petilil", "Lilligant", "Krokorok", "Maractus", "Zoroark"
+  ],
+  "rare": [
+    "Charizard", "Blastoise", "Venusaur", "Gengar", "Dragonite", "Alakazam", 
+    "Machamp", "Lapras", "Arcanine", "Rhydon", "Nidoking", "Nidoqueen", 
+    "Gyarados", "Clefable", "Poliwrath", "Vileplume", "Victreebel", "Tentacruel", 
+    "Rapidash", "Hypno", "Chansey", "Electabuzz", "Magmar", "Jynx", "Pinsir", 
+    "Scyther", "Starmie", "Kingler", "Electrode", "Exeggutor", "Marowak", 
+    "Weezing", "Hitmonchan", "Hitmonlee", "Snorlax", "Ditto", 
+    "Aerodactyl", "Kabutops", "Omastar", "Articuno", "Zapdos", "Moltres", 
+    "Typhlosion", "Feraligatr", "Meganium", "Ampharos", "Espeon", "Umbreon", 
+    "Steelix", "Crobat", "Forretress", "Houndoom", "Kingdra", "Blissey", 
+    "Scizor", "Heracross", "Tyranitar", "Lugia", "HoOh", "Raikou", "Entei", 
+    "Suicune", "Sceptile", "Blaziken", "Swampert", "Metagross", "Salamence", 
+    "Flygon", "Walrein", "Claydol", "Milotic", "Altaria", "Gardevoir", "Absol", 
+    "Regirock", "Regice", "Registeel", "Latias", "Latios", "Jirachi", "Deoxys", 
+    "Torterra", "Infernape", "Empoleon", "Roserade", "Luxray", "Rampardos", 
+    "Bastiodon", "Drapion", "Togekiss", "Magnezone", "Rhyperior", "Electivire", 
+    "Magmortar", "Gallade", "Yanmega", "Gliscor", "Mamoswine"
+  ],
+  "ultrarare": [
+    "Shiny Charizard GX", "Rainbow Pikachu", "Mega Lucario",
+    "Shiny Umbreon", "Shiny Gyarados", "Primal Kyogre",
+    "Shiny Rayquaza", "Shiny Metagross", "Shiny Tyranitar",
+    "Shiny Greninja", "Shiny Eevee", "Shiny Mew",
+    "Shiny Hooh", "Shiny Lugia", "Shiny Latios",
+    "Shiny Latias", "Shiny Celebi", "Shiny Jirachi",
+    "Shiny Zygarde", "Shiny Reshiram", "Shiny Zekrom"
+  ],
+  "secretrare": [
+    "Gold Mewtwo", "Alternate Art Lugia", "Gold Zacian", "Rainbow Eternatus",
+    "Gold Reshiram", "Rainbow Zekrom", "Gold Dialga", "Gold Palkia", "Gold Giratina", "Gold Arceus",
+    "Gold Kyogre", "Gold Groudon", "Gold Rayquaza", "Rainbow Charizard", 
+    "Gold Solgaleo", "Gold Lunala", "Gold Necrozma", "Rainbow Blastoise",
+    "Rainbow Venusaur", "Gold Eternatus", "Rainbow Kyurem", "Gold Xerneas",
+    "Gold Yveltal", "Gold Tapu Koko", "Gold Tapu Lele", "Gold Tapu Bulu", "Gold Tapu Fini"
+  ]
+}
