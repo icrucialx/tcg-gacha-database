@@ -98,6 +98,43 @@ app.get('/collection/:user_id', (req, res) => {
     });
 });
 
+app.get('/analytics/top-cards', (req, res) => {
+    const query = `
+        SELECT card_name, COUNT(*) AS pulls
+        FROM pulls
+        GROUP BY card_name
+        ORDER BY pulls DESC
+        LIMIT 10
+    `;
+
+    db.all(query, [], (err, rows) => {
+        if (err) {
+            console.error('Error fetching top cards:', err.message);
+            return res.status(500).json({ error: 'Failed to fetch top cards' });
+        }
+
+        res.json(rows);
+    });
+});
+
+app.get('/analytics/rarity-distribution', (req, res) => {
+    const query = `
+        SELECT rarity, COUNT(*) AS pulls
+        FROM pulls
+        GROUP BY rarity
+        ORDER BY pulls DESC
+    `;
+
+    db.all(query, [], (err, rows) => {
+        if (err) {
+            console.error('Error fetching rarity distribution:', err.message);
+            return res.status(500).json({ error: 'Failed to fetch rarity distribution' });
+        }
+
+        res.json(rows);
+    });
+});
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
