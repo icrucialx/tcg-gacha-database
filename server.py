@@ -13,6 +13,7 @@ def get_db_connection():
 @app.route('/pulls', methods=['POST'])
 def log_pull():
     data = request.get_json()
+    print("Received data:", data)
     card_name = data['card_name']
     rarity = data['rarity']
     date_of_pull = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
