@@ -65,6 +65,7 @@ app.post('/pulls', (req, res) => {
     });
 });
 
+
 // API endpoint to fetch all pulls
 app.get('/pulls', (req, res) => {
   const query = `SELECT * FROM pulls`;
