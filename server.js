@@ -9,14 +9,12 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Twitch OAuth Configuration
-const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID || '7jt439gexzc4mf0a4gsg42235qgvr9';
-const TWITCH_CLIENT_SECRET = process.env.TWITCH_CLIENT_SECRET || 'f356ouqgzu0n9pqdw6xzwhgtclg6vk';
+const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID || 'your-twitch-client-id';
+const TWITCH_CLIENT_SECRET = process.env.TWITCH_CLIENT_SECRET || 'your-twitch-client-secret';
 const REDIRECT_URI = process.env.REDIRECT_URI || 'http://localhost:3000/auth/twitch/callback';
 
-// Middleware to parse JSON bodies
-app.use(cors({
-    origin: 'https://icrucialx.github.io' // Allow requests from your frontend domain
-}));
+// Middleware
+app.use(cors({ origin: 'https://icrucialx.github.io' }));
 app.use(bodyParser.json());
 
 // Initialize SQLite database
@@ -28,7 +26,24 @@ const db = new sqlite3.Database('tcg-gacha.db', (err) => {
     }
 });
 
-// Create `pulls` table if it doesn't exist
+// Create `users` table
+db.run(
+    `CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        login TEXT NOT NULL,
+        display_name TEXT NOT NULL,
+        profile_image_url TEXT
+    )`,
+    (err) => {
+        if (err) {
+            console.error('Error creating users table:', err.message);
+        } else {
+            console.log('Ensured the "users" table exists.');
+        }
+    }
+);
+
+// Create `pulls` table
 db.run(
     `CREATE TABLE IF NOT EXISTS pulls (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -39,12 +54,21 @@ db.run(
     )`,
     (err) => {
         if (err) {
-            console.error('Error creating table:', err.message);
+            console.error('Error creating pulls table:', err.message);
         } else {
             console.log('Ensured the "pulls" table exists with user_id.');
         }
     }
 );
+
+// Middleware to authenticate requests
+const authenticate = (req, res, next) => {
+    if (!req.headers.authorization) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    // Token verification logic can be added here
+    next();
+};
 
 // Twitch OAuth Login Route
 app.get('/login', (req, res) => {
@@ -80,7 +104,21 @@ app.get('/auth/twitch/callback', async (req, res) => {
 
         const userData = userResponse.data.data[0];
 
-        // Respond with user information (can be stored in a session or database)
+        // Save user to the database
+        db.run(
+            `INSERT INTO users (id, login, display_name, profile_image_url) VALUES (?, ?, ?, ?)
+             ON CONFLICT(id) DO UPDATE SET
+             login = excluded.login,
+             display_name = excluded.display_name,
+             profile_image_url = excluded.profile_image_url`,
+            [userData.id, userData.login, userData.display_name, userData.profile_image_url],
+            (err) => {
+                if (err) {
+                    console.error('Error saving user:', err.message);
+                }
+            }
+        );
+
         res.json({
             message: 'Authentication successful!',
             user: userData,
@@ -91,43 +129,10 @@ app.get('/auth/twitch/callback', async (req, res) => {
     }
 });
 
-// Existing Routes
-app.get('/', (req, res) => {
-    res.send('Hello World! The Node.js backend is running!');
-});
+// Protected API Routes
+app.use(authenticate);
 
-app.post('/pulls', (req, res) => {
-    const { user_id, card_name, rarity } = req.body;
-
-    if (!user_id || !card_name || !rarity) {
-        return res.status(400).json({ error: 'user_id, card_name, and rarity are required' });
-    }
-
-    const date_of_pull = new Date().toISOString();
-    const query = `INSERT INTO pulls (user_id, card_name, rarity, date_of_pull) VALUES (?, ?, ?, ?)`;
-
-    db.run(query, [user_id, card_name, rarity, date_of_pull], function (err) {
-        if (err) {
-            console.error('Error inserting data:', err.message);
-            return res.status(500).json({ error: 'Failed to log pull' });
-        }
-
-        res.status(201).json({ status: 'success', id: this.lastID });
-    });
-});
-
-app.get('/pulls', (req, res) => {
-    const query = `SELECT * FROM pulls`;
-    db.all(query, [], (err, rows) => {
-        if (err) {
-            console.error('Error fetching data:', err.message);
-            return res.status(500).json({ error: 'Failed to fetch pulls' });
-        }
-
-        res.json(rows);
-    });
-});
-
+// API Endpoints
 app.get('/collection/:user_id', (req, res) => {
     const { user_id } = req.params;
 
@@ -148,40 +153,23 @@ app.get('/collection/:user_id', (req, res) => {
     });
 });
 
-app.get('/analytics/top-cards', (req, res) => {
-    const query = `
-        SELECT card_name, COUNT(*) AS pulls
-        FROM pulls
-        GROUP BY card_name
-        ORDER BY pulls DESC
-        LIMIT 10
-    `;
+app.post('/pulls', (req, res) => {
+    const { user_id, card_name, rarity } = req.body;
 
-    db.all(query, [], (err, rows) => {
+    if (!user_id || !card_name || !rarity) {
+        return res.status(400).json({ error: 'user_id, card_name, and rarity are required' });
+    }
+
+    const date_of_pull = new Date().toISOString();
+    const query = `INSERT INTO pulls (user_id, card_name, rarity, date_of_pull) VALUES (?, ?, ?, ?)`;
+
+    db.run(query, [user_id, card_name, rarity, date_of_pull], function (err) {
         if (err) {
-            console.error('Error fetching top cards:', err.message);
-            return res.status(500).json({ error: 'Failed to fetch top cards' });
+            console.error('Error inserting data:', err.message);
+            return res.status(500).json({ error: 'Failed to log pull' });
         }
 
-        res.json(rows);
-    });
-});
-
-app.get('/analytics/rarity-distribution', (req, res) => {
-    const query = `
-        SELECT rarity, COUNT(*) AS pulls
-        FROM pulls
-        GROUP BY rarity
-        ORDER BY pulls DESC
-    `;
-
-    db.all(query, [], (err, rows) => {
-        if (err) {
-            console.error('Error fetching rarity distribution:', err.message);
-            return res.status(500).json({ error: 'Failed to fetch rarity distribution' });
-        }
-
-        res.json(rows);
+        res.status(201).json({ status: 'success', id: this.lastID });
     });
 });
 
