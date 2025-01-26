@@ -2,10 +2,16 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
+const axios = require('axios');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Twitch OAuth Configuration
+const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID || 'your-twitch-client-id';
+const TWITCH_CLIENT_SECRET = process.env.TWITCH_CLIENT_SECRET || 'your-twitch-client-secret';
+const REDIRECT_URI = process.env.REDIRECT_URI || 'http://localhost:3000/auth/twitch/callback';
 
 // Middleware to parse JSON bodies
 app.use(cors({
@@ -15,11 +21,11 @@ app.use(bodyParser.json());
 
 // Initialize SQLite database
 const db = new sqlite3.Database('tcg-gacha.db', (err) => {
-  if (err) {
-    console.error('Error connecting to the database:', err.message);
-  } else {
-    console.log('Connected to SQLite database.');
-  }
+    if (err) {
+        console.error('Error connecting to the database:', err.message);
+    } else {
+        console.log('Connected to SQLite database.');
+    }
 });
 
 // Create `pulls` table if it doesn't exist
@@ -40,12 +46,56 @@ db.run(
     }
 );
 
-// Home route
-app.get('/', (req, res) => {
-  res.send('Hello World! The Node.js backend is running!');
+// Twitch OAuth Login Route
+app.get('/login', (req, res) => {
+    const scope = 'user:read:email';
+    res.redirect(`https://id.twitch.tv/oauth2/authorize?client_id=${TWITCH_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=${scope}`);
 });
 
-// API endpoint to log a card pull
+// Twitch OAuth Callback Route
+app.get('/auth/twitch/callback', async (req, res) => {
+    const code = req.query.code;
+
+    try {
+        // Exchange code for an access token
+        const tokenResponse = await axios.post('https://id.twitch.tv/oauth2/token', null, {
+            params: {
+                client_id: TWITCH_CLIENT_ID,
+                client_secret: TWITCH_CLIENT_SECRET,
+                code: code,
+                grant_type: 'authorization_code',
+                redirect_uri: REDIRECT_URI,
+            },
+        });
+
+        const accessToken = tokenResponse.data.access_token;
+
+        // Fetch user information
+        const userResponse = await axios.get('https://api.twitch.tv/helix/users', {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                'Client-ID': TWITCH_CLIENT_ID,
+            },
+        });
+
+        const userData = userResponse.data.data[0];
+
+        // Respond with user information (can be stored in a session or database)
+        res.json({
+            message: 'Authentication successful!',
+            user: userData,
+        });
+    } catch (error) {
+        console.error('Error during Twitch OAuth:', error);
+        res.status(500).send('Authentication failed');
+    }
+});
+
+// Existing Routes
+app.get('/', (req, res) => {
+    res.send('Hello World! The Node.js backend is running!');
+});
+
 app.post('/pulls', (req, res) => {
     const { user_id, card_name, rarity } = req.body;
 
@@ -66,18 +116,16 @@ app.post('/pulls', (req, res) => {
     });
 });
 
-
-// API endpoint to fetch all pulls
 app.get('/pulls', (req, res) => {
-  const query = `SELECT * FROM pulls`;
-  db.all(query, [], (err, rows) => {
-    if (err) {
-      console.error('Error fetching data:', err.message);
-      return res.status(500).json({ error: 'Failed to fetch pulls' });
-    }
+    const query = `SELECT * FROM pulls`;
+    db.all(query, [], (err, rows) => {
+        if (err) {
+            console.error('Error fetching data:', err.message);
+            return res.status(500).json({ error: 'Failed to fetch pulls' });
+        }
 
-    res.json(rows);
-  });
+        res.json(rows);
+    });
 });
 
 app.get('/collection/:user_id', (req, res) => {
@@ -139,5 +187,5 @@ app.get('/analytics/rarity-distribution', (req, res) => {
 
 // Start the server
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
 });
