@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 3000;
 // Twitch OAuth Configuration
 const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID || '7jt439gexzc4mf0a4gsg42235qgvr9';
 const TWITCH_CLIENT_SECRET = process.env.TWITCH_CLIENT_SECRET || 'f356ouqgzu0n9pqdw6xzwhgtclg6vk';
-const REDIRECT_URI = process.env.REDIRECT_URI || 'https://icrucialtcg.onrender.com';
+const REDIRECT_URI = process.env.REDIRECT_URI || 'https://icrucialtcg.onrender.com/auth/twitch/callback';
 
 // Middleware
 app.use(cors({ origin: 'https://icrucialx.github.io' })); // Update origin as needed
