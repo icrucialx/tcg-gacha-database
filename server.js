@@ -9,9 +9,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Twitch OAuth Configuration
-const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID || '7jt439gexzc4mf0a4gsg42235qgvr9';
-const TWITCH_CLIENT_SECRET = process.env.TWITCH_CLIENT_SECRET || 'f356ouqgzu0n9pqdw6xzwhgtclg6vk';
-const REDIRECT_URI = process.env.REDIRECT_URI || 'https://icrucialx.github.io/icrucialtcg/';
+const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID;
+const TWITCH_CLIENT_SECRET = process.env.TWITCH_CLIENT_SECRET;
+const REDIRECT_URI = process.env.REDIRECT_URI;
 
 // Middleware
 app.use(cors({ origin: 'https://icrucialx.github.io' })); // Update origin as needed
@@ -21,6 +21,7 @@ app.use(bodyParser.json());
 const db = new sqlite3.Database('tcg-gacha.db', (err) => {
     if (err) {
         console.error('Error connecting to the database:', err.message);
+        process.exit(1); // Exit if database connection fails
     } else {
         console.log('Connected to SQLite database.');
     }
@@ -62,7 +63,7 @@ db.run(
 );
 
 // Middleware to authenticate requests
-const authenticate = (req, res, next) => {
+const authenticate = async (req, res, next) => {
     const token = req.headers.authorization?.split(' ')[1];
 
     if (!token) {
@@ -70,9 +71,17 @@ const authenticate = (req, res, next) => {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    console.log('Authorization token received:', token);
-    // Placeholder: Token verification logic can be added here
-    next();
+    try {
+        const validationResponse = await axios.get('https://id.twitch.tv/oauth2/validate', {
+            headers: { Authorization: `OAuth ${token}` },
+        });
+
+        console.log('Token validated:', validationResponse.data);
+        next();
+    } catch (error) {
+        console.error('Token validation failed:', error.response?.data || error.message);
+        res.status(401).json({ error: 'Unauthorized' });
+    }
 };
 
 // Public Routes
@@ -87,6 +96,10 @@ app.get('/login', (req, res) => {
 
 app.get('/auth/twitch/callback', async (req, res) => {
     const code = req.query.code;
+
+    if (!code) {
+        return res.status(400).json({ error: 'Authorization code is required' });
+    }
 
     try {
         // Exchange code for an access token
@@ -127,18 +140,22 @@ app.get('/auth/twitch/callback', async (req, res) => {
             }
         );
 
-        res.json({
-            message: 'Authentication successful!',
-            user: userData,
-        });
+        // Redirect back to the frontend with the token and user ID
+        res.redirect(`${REDIRECT_URI}?token=${accessToken}&user_id=${userData.id}`);
     } catch (error) {
-        console.error('Error during Twitch OAuth:', error);
+        console.error('Error during Twitch OAuth:', error.response?.data || error.message);
         res.status(500).send('Authentication failed');
     }
 });
 
 app.get('/health', (req, res) => {
-    res.status(200).send('Server is healthy and running!');
+    db.get('SELECT 1', [], (err) => {
+        if (err) {
+            return res.status(500).json({ status: 'error', message: 'Database connection failed' });
+        }
+
+        res.status(200).json({ status: 'healthy', message: 'Server is running and database is connected' });
+    });
 });
 
 // Protected Routes
