@@ -9,8 +9,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Twitch OAuth Configuration
-const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID || 'your-twitch-client-id';
-const TWITCH_CLIENT_SECRET = process.env.TWITCH_CLIENT_SECRET || 'your-twitch-client-secret';
+const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID || '7jt439gexzc4mf0a4gsg42235qgvr9';
+const TWITCH_CLIENT_SECRET = process.env.TWITCH_CLIENT_SECRET || 'f356ouqgzu0n9pqdw6xzwhgtclg6vk';
 const REDIRECT_URI = process.env.REDIRECT_URI || 'http://localhost:3000/auth/twitch/callback';
 
 // Middleware
