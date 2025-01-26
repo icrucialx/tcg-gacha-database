@@ -14,7 +14,7 @@ const TWITCH_CLIENT_SECRET = process.env.TWITCH_CLIENT_SECRET || 'f356ouqgzu0n9p
 const REDIRECT_URI = process.env.REDIRECT_URI || 'http://localhost:3000/auth/twitch/callback';
 
 // Middleware
-app.use(cors({ origin: 'https://icrucialx.github.io' }));
+app.use(cors({ origin: 'https://icrucialx.github.io' })); // Update origin as needed
 app.use(bodyParser.json());
 
 // Initialize SQLite database
@@ -63,20 +63,28 @@ db.run(
 
 // Middleware to authenticate requests
 const authenticate = (req, res, next) => {
-    if (!req.headers.authorization) {
+    const token = req.headers.authorization?.split(' ')[1];
+
+    if (!token) {
+        console.error('No authorization token provided');
         return res.status(401).json({ error: 'Unauthorized' });
     }
-    // Token verification logic can be added here
+
+    console.log('Authorization token received:', token);
+    // Placeholder: Token verification logic can be added here
     next();
 };
 
-// Twitch OAuth Login Route
+// Public Routes
+app.get('/', (req, res) => {
+    res.send('Hello World! The Node.js backend is running!');
+});
+
 app.get('/login', (req, res) => {
     const scope = 'user:read:email';
     res.redirect(`https://id.twitch.tv/oauth2/authorize?client_id=${TWITCH_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=${scope}`);
 });
 
-// Twitch OAuth Callback Route
 app.get('/auth/twitch/callback', async (req, res) => {
     const code = req.query.code;
 
@@ -86,7 +94,7 @@ app.get('/auth/twitch/callback', async (req, res) => {
             params: {
                 client_id: TWITCH_CLIENT_ID,
                 client_secret: TWITCH_CLIENT_SECRET,
-                code: code,
+                code,
                 grant_type: 'authorization_code',
                 redirect_uri: REDIRECT_URI,
             },
@@ -129,11 +137,12 @@ app.get('/auth/twitch/callback', async (req, res) => {
     }
 });
 
-// Protected API Routes
-app.use(authenticate);
+app.get('/health', (req, res) => {
+    res.status(200).send('Server is healthy and running!');
+});
 
-// API Endpoints
-app.get('/collection/:user_id', (req, res) => {
+// Protected Routes
+app.get('/collection/:user_id', authenticate, (req, res) => {
     const { user_id } = req.params;
 
     const query = `
@@ -153,7 +162,7 @@ app.get('/collection/:user_id', (req, res) => {
     });
 });
 
-app.post('/pulls', (req, res) => {
+app.post('/pulls', authenticate, (req, res) => {
     const { user_id, card_name, rarity } = req.body;
 
     if (!user_id || !card_name || !rarity) {
