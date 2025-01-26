@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 3000;
 // Twitch OAuth Configuration
 const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID;
 const TWITCH_CLIENT_SECRET = process.env.TWITCH_CLIENT_SECRET;
-const REDIRECT_URI = process.env.REDIRECT_URI;
+const REDIRECT_URI = process.env.REDIRECT_URI || 'https://icrucialx.github.io/icrucialtcg/';
 
 // Middleware
 app.use(cors({ origin: 'https://icrucialx.github.io' })); // Update origin as needed
