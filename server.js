@@ -114,6 +114,7 @@ app.get('/auth/twitch/callback', async (req, res) => {
         });
 
         const accessToken = tokenResponse.data.access_token;
+        console.log("Access Token:", accessToken);
 
         // Fetch user information
         const userResponse = await axios.get('https://api.twitch.tv/helix/users', {
@@ -124,6 +125,7 @@ app.get('/auth/twitch/callback', async (req, res) => {
         });
 
         const userData = userResponse.data.data[0];
+        console.log("Twitch User Data:", userData);
 
         // Save user to the database
         db.run(
@@ -143,8 +145,8 @@ app.get('/auth/twitch/callback', async (req, res) => {
         // Redirect back to the frontend with the token and user ID
         res.redirect(`${REDIRECT_URI}?token=${accessToken}&user_id=${userData.id}`);
     } catch (error) {
-        console.error('Error during Twitch OAuth:', error.response?.data || error.message);
-        res.status(500).send('Authentication failed');
+        console.error('Error during OAuth callback:', error.response?.data || error.message);
+        res.status(500).json({ error: 'Failed to authenticate', details: error.response?.data || error.message });
     }
 });
 
