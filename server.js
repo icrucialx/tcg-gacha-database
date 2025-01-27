@@ -96,36 +96,33 @@ app.get('/login', (req, res) => {
     res.redirect(`https://id.twitch.tv/oauth2/authorize?client_id=${TWITCH_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=${scope}`);
 });
 
-app.get('/auth/twitch/callback', async (req, res) => {
-    const code = req.query.code; // Extract the code from the query parameters
-    console.log("Authorization code received:", code);
+app.post('/auth/twitch/callback', async (req, res) => {
+    const { code } = req.body;
 
     if (!code) {
         return res.status(400).json({ error: 'Authorization code is required' });
     }
 
     try {
-        // Exchange the code for an access token
         const tokenResponse = await axios.post('https://id.twitch.tv/oauth2/token', null, {
             params: {
                 client_id: TWITCH_CLIENT_ID,
                 client_secret: TWITCH_CLIENT_SECRET,
                 code,
                 grant_type: 'authorization_code',
-                redirect_uri: REDIRECT_URI,
+                redirect_uri: 'https://icrucialx.github.io/icrucialtcg/', // Update to match frontend
             },
         });
 
         const accessToken = tokenResponse.data.access_token;
+        console.log("Access Token:", accessToken);
 
-        // Fetch user information
-        const userResponse = await axios.get('https://api.twitch.tv/helix/users', {
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-                'Client-ID': TWITCH_CLIENT_ID,
-            },
-        });
-
+        res.json({ token: accessToken });
+    } catch (error) {
+        console.error('Error during token exchange:', error.message);
+        res.status(500).json({ error: 'Failed to authenticate' });
+    }
+});
         const userData = userResponse.data.data[0];
         console.log("User Data:", userData);
 
