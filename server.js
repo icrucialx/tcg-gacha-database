@@ -95,14 +95,14 @@ app.get('/login', (req, res) => {
 });
 
 app.get('/auth/twitch/callback', async (req, res) => {
-    const code = req.query.code;
+    const code = req.query.code; // Extract the code from the query parameters
 
     if (!code) {
         return res.status(400).json({ error: 'Authorization code is required' });
     }
 
     try {
-        // Exchange code for an access token
+        // Exchange the code for an access token
         const tokenResponse = await axios.post('https://id.twitch.tv/oauth2/token', null, {
             params: {
                 client_id: TWITCH_CLIENT_ID,
@@ -114,10 +114,7 @@ app.get('/auth/twitch/callback', async (req, res) => {
         });
 
         const accessToken = tokenResponse.data.access_token;
-        console.log("Redirect URI sent to Twitch:", REDIRECT_URI);
-        console.log("Authorization code:", code);
         console.log("Access Token:", accessToken);
-        onsole.error("OAuth callback error:", error.response?.data || error.message);
 
         // Fetch user information
         const userResponse = await axios.get('https://api.twitch.tv/helix/users', {
@@ -126,6 +123,18 @@ app.get('/auth/twitch/callback', async (req, res) => {
                 'Client-ID': TWITCH_CLIENT_ID,
             },
         });
+
+        const userData = userResponse.data.data[0];
+        console.log("User Data:", userData);
+
+        // Redirect to the frontend with the token and user ID
+        res.redirect(`${REDIRECT_URI}?token=${accessToken}&user_id=${userData.id}`);
+    } catch (error) {
+        console.error('Error during OAuth callback:', error.response?.data || error.message);
+        res.status(500).json({ error: 'Failed to authenticate', details: error.response?.data || error.message });
+    }
+});
+
 
         const userData = userResponse.data.data[0];
         console.log("Twitch User Data:", userData);
