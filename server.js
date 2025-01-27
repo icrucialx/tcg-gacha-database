@@ -104,6 +104,7 @@ app.post('/auth/twitch/callback', async (req, res) => {
     }
 
     try {
+        // Exchange the code for an access token
         const tokenResponse = await axios.post('https://id.twitch.tv/oauth2/token', null, {
             params: {
                 client_id: TWITCH_CLIENT_ID,
@@ -115,14 +116,15 @@ app.post('/auth/twitch/callback', async (req, res) => {
         });
 
         const accessToken = tokenResponse.data.access_token;
-        console.log("Access Token:", accessToken);
 
-        res.json({ token: accessToken });
-    } catch (error) {
-        console.error('Error during token exchange:', error.message);
-        res.status(500).json({ error: 'Failed to authenticate' });
-    }
-});
+        // Fetch user information from Twitch
+        const userResponse = await axios.get('https://api.twitch.tv/helix/users', {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                'Client-ID': TWITCH_CLIENT_ID,
+            },
+        });
+
         const userData = userResponse.data.data[0];
         console.log("User Data:", userData);
 
@@ -141,8 +143,8 @@ app.post('/auth/twitch/callback', async (req, res) => {
             }
         );
 
-        // Redirect to frontend with token and user ID
-        const frontendRedirect = `https://icrucialx.github.io/?token=${accessToken}&user_id=${userData.id}`;
+        // Redirect to the frontend with token and user ID
+        const frontendRedirect = `https://icrucialx.github.io/icrucialtcg/?token=${accessToken}&user_id=${userData.id}`;
         console.log("Redirecting to frontend:", frontendRedirect);
         res.redirect(frontendRedirect);
     } catch (error) {
@@ -150,6 +152,7 @@ app.post('/auth/twitch/callback', async (req, res) => {
         res.status(500).json({ error: 'Failed to authenticate', details: error.response?.data || error.message });
     }
 });
+
 
 app.get('/health', (req, res) => {
     db.get('SELECT 1', [], (err) => {
