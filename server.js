@@ -114,7 +114,10 @@ app.get('/auth/twitch/callback', async (req, res) => {
         });
 
         const accessToken = tokenResponse.data.access_token;
+        console.log("Redirect URI sent to Twitch:", REDIRECT_URI);
+        console.log("Authorization code:", code);
         console.log("Access Token:", accessToken);
+        onsole.error("OAuth callback error:", error.response?.data || error.message);
 
         // Fetch user information
         const userResponse = await axios.get('https://api.twitch.tv/helix/users', {
