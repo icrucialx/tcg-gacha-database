@@ -96,6 +96,7 @@ app.get('/login', (req, res) => {
 
 app.get('/auth/twitch/callback', async (req, res) => {
     const code = req.query.code; // Extract the code from the query parameters
+    console.log("Authorization code received:", code);
 
     if (!code) {
         return res.status(400).json({ error: 'Authorization code is required' });
@@ -114,7 +115,6 @@ app.get('/auth/twitch/callback', async (req, res) => {
         });
 
         const accessToken = tokenResponse.data.access_token;
-        console.log("Access Token:", accessToken);
 
         // Fetch user information
         const userResponse = await axios.get('https://api.twitch.tv/helix/users', {
@@ -125,7 +125,7 @@ app.get('/auth/twitch/callback', async (req, res) => {
         });
 
         const userData = userResponse.data.data[0];
-        console.log("Twitch User Data:", userData);
+        console.log("User Data:", userData);
 
         // Save user to the database
         db.run(
@@ -142,7 +142,7 @@ app.get('/auth/twitch/callback', async (req, res) => {
             }
         );
 
-        // Redirect back to the frontend with the token and user ID
+        // Redirect to frontend with token and user ID
         res.redirect(`${REDIRECT_URI}?token=${accessToken}&user_id=${userData.id}`);
     } catch (error) {
         console.error('Error during OAuth callback:', error.response?.data || error.message);
@@ -206,4 +206,5 @@ app.post('/pulls', authenticate, (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
     console.log(`OAuth Redirect URI: ${REDIRECT_URI}`);
+    console.log(`Redirecting to Twitch: https://id.twitch.tv/oauth2/authorize?client_id=${TWITCH_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=${scope}`);
 });
