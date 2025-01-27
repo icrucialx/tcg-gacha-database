@@ -90,9 +90,11 @@ app.get('/', (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-    const scope = 'user:read:email';
+    const scope = 'user:read:email'; // Define the scope
+    console.log(`Redirecting to Twitch: https://id.twitch.tv/oauth2/authorize?client_id=${TWITCH_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=${scope}`);
     res.redirect(`https://id.twitch.tv/oauth2/authorize?client_id=${TWITCH_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=${scope}`);
 });
+
 
 app.get('/auth/twitch/callback', async (req, res) => {
     const code = req.query.code; // Extract the code from the query parameters
@@ -206,5 +208,4 @@ app.post('/pulls', authenticate, (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
     console.log(`OAuth Redirect URI: ${REDIRECT_URI}`);
-    console.log(`Redirecting to Twitch: https://id.twitch.tv/oauth2/authorize?client_id=${TWITCH_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=${scope}`);
 });
