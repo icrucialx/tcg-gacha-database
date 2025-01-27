@@ -125,18 +125,6 @@ app.get('/auth/twitch/callback', async (req, res) => {
         });
 
         const userData = userResponse.data.data[0];
-        console.log("User Data:", userData);
-
-        // Redirect to the frontend with the token and user ID
-        res.redirect(`${REDIRECT_URI}?token=${accessToken}&user_id=${userData.id}`);
-    } catch (error) {
-        console.error('Error during OAuth callback:', error.response?.data || error.message);
-        res.status(500).json({ error: 'Failed to authenticate', details: error.response?.data || error.message });
-    }
-});
-
-
-        const userData = userResponse.data.data[0];
         console.log("Twitch User Data:", userData);
 
         // Save user to the database
@@ -161,6 +149,7 @@ app.get('/auth/twitch/callback', async (req, res) => {
         res.status(500).json({ error: 'Failed to authenticate', details: error.response?.data || error.message });
     }
 });
+
 
 app.get('/health', (req, res) => {
     db.get('SELECT 1', [], (err) => {
