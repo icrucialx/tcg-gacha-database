@@ -11,11 +11,14 @@ const PORT = process.env.PORT || 3000;
 // Twitch OAuth Configuration
 const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID;
 const TWITCH_CLIENT_SECRET = process.env.TWITCH_CLIENT_SECRET;
-const REDIRECT_URI = 'https://icrucialx.github.io/icrucialtcg/';
-
+const REDIRECT_URI = 'https://icrucialx.github.io/icrucialtcg/'; // Ensure it matches the frontend URL
 
 // Middleware
-app.use(cors({ origin: 'https://icrucialx.github.io' }));
+app.use(cors({
+    origin: 'https://icrucialx.github.io', // Allow requests from your frontend
+    methods: ['GET', 'POST'], // Allow only necessary methods
+    allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
+}));
 app.use(bodyParser.json());
 
 // Initialize SQLite database
@@ -58,7 +61,7 @@ db.run(
         if (err) {
             console.error('Error creating pulls table:', err.message);
         } else {
-            console.log('Ensured the "pulls" table exists with user_id.');
+            console.log('Ensured the "pulls" table exists.');
         }
     }
 );
@@ -111,7 +114,7 @@ app.post('/auth/twitch/callback', async (req, res) => {
                 client_secret: TWITCH_CLIENT_SECRET,
                 code,
                 grant_type: 'authorization_code',
-                redirect_uri: 'https://icrucialx.github.io/icrucialtcg/', // Update to match frontend
+                redirect_uri: REDIRECT_URI, // Match the frontend URL
             },
         });
 
@@ -144,7 +147,7 @@ app.post('/auth/twitch/callback', async (req, res) => {
         );
 
         // Redirect to the frontend with token and user ID
-        const frontendRedirect = `https://icrucialx.github.io/icrucialtcg/?token=${accessToken}&user_id=${userData.id}`;
+        const frontendRedirect = `${REDIRECT_URI}?token=${accessToken}&user_id=${userData.id}`;
         console.log("Redirecting to frontend:", frontendRedirect);
         res.redirect(frontendRedirect);
     } catch (error) {
@@ -152,7 +155,6 @@ app.post('/auth/twitch/callback', async (req, res) => {
         res.status(500).json({ error: 'Failed to authenticate', details: error.response?.data || error.message });
     }
 });
-
 
 app.get('/health', (req, res) => {
     db.get('SELECT 1', [], (err) => {
