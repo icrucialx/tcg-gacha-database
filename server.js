@@ -14,7 +14,7 @@ const TWITCH_CLIENT_SECRET = process.env.TWITCH_CLIENT_SECRET;
 const REDIRECT_URI = process.env.REDIRECT_URI || 'https://icrucialtcg.onrender.com/auth/twitch/callback';
 
 // Middleware
-app.use(cors({ origin: 'https://icrucialx.github.io' })); // Update origin as needed
+app.use(cors({ origin: 'https://icrucialx.github.io' }));
 app.use(bodyParser.json());
 
 // Initialize SQLite database
@@ -95,7 +95,6 @@ app.get('/login', (req, res) => {
     res.redirect(`https://id.twitch.tv/oauth2/authorize?client_id=${TWITCH_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=${scope}`);
 });
 
-
 app.get('/auth/twitch/callback', async (req, res) => {
     const code = req.query.code; // Extract the code from the query parameters
     console.log("Authorization code received:", code);
@@ -145,13 +144,14 @@ app.get('/auth/twitch/callback', async (req, res) => {
         );
 
         // Redirect to frontend with token and user ID
-        res.redirect(`${REDIRECT_URI}?token=${accessToken}&user_id=${userData.id}`);
+        const frontendRedirect = `https://icrucialx.github.io/?token=${accessToken}&user_id=${userData.id}`;
+        console.log("Redirecting to frontend:", frontendRedirect);
+        res.redirect(frontendRedirect);
     } catch (error) {
         console.error('Error during OAuth callback:', error.response?.data || error.message);
         res.status(500).json({ error: 'Failed to authenticate', details: error.response?.data || error.message });
     }
 });
-
 
 app.get('/health', (req, res) => {
     db.get('SELECT 1', [], (err) => {
