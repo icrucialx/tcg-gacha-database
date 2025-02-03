@@ -2,53 +2,26 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
-const axios = require('axios');
-require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Twitch OAuth Configuration
-const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID;
-const TWITCH_CLIENT_SECRET = process.env.TWITCH_CLIENT_SECRET;
-const REDIRECT_URI = 'https://icrucialx.github.io/icrucialtcg/'; // Ensure it matches the frontend URL
-
-// Middleware
+// Middleware to parse JSON bodies
 app.use(cors({
-    origin: 'https://icrucialx.github.io', // Allow requests from your frontend
-    methods: ['GET', 'POST'], // Allow only necessary methods
-    allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
+    origin: 'https://icrucialx.github.io' // Allow requests from your frontend domain
 }));
 app.use(bodyParser.json());
 
 // Initialize SQLite database
 const db = new sqlite3.Database('tcg-gacha.db', (err) => {
-    if (err) {
-        console.error('Error connecting to the database:', err.message);
-        process.exit(1); // Exit if database connection fails
-    } else {
-        console.log('Connected to SQLite database.');
-    }
+  if (err) {
+    console.error('Error connecting to the database:', err.message);
+  } else {
+    console.log('Connected to SQLite database.');
+  }
 });
 
-// Create `users` table
-db.run(
-    `CREATE TABLE IF NOT EXISTS users (
-        id TEXT PRIMARY KEY,
-        login TEXT NOT NULL,
-        display_name TEXT NOT NULL,
-        profile_image_url TEXT
-    )`,
-    (err) => {
-        if (err) {
-            console.error('Error creating users table:', err.message);
-        } else {
-            console.log('Ensured the "users" table exists.');
-        }
-    }
-);
-
-// Create `pulls` table
+// Create `pulls` table if it doesn't exist
 db.run(
     `CREATE TABLE IF NOT EXISTS pulls (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -59,135 +32,20 @@ db.run(
     )`,
     (err) => {
         if (err) {
-            console.error('Error creating pulls table:', err.message);
+            console.error('Error creating table:', err.message);
         } else {
-            console.log('Ensured the "pulls" table exists.');
+            console.log('Ensured the "pulls" table exists with user_id.');
         }
     }
 );
 
-// Middleware to authenticate requests
-const authenticate = async (req, res, next) => {
-    const token = req.headers.authorization?.split(' ')[1];
-
-    if (!token) {
-        console.error('No authorization token provided');
-        return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    try {
-        const validationResponse = await axios.get('https://id.twitch.tv/oauth2/validate', {
-            headers: { Authorization: `OAuth ${token}` },
-        });
-
-        console.log('Token validated:', validationResponse.data);
-        next();
-    } catch (error) {
-        console.error('Token validation failed:', error.response?.data || error.message);
-        res.status(401).json({ error: 'Unauthorized' });
-    }
-};
-
-// Public Routes
+// Home route
 app.get('/', (req, res) => {
-    res.send('Hello World! The Node.js backend is running!');
+  res.send('Hello World! The Node.js backend is running!');
 });
 
-app.get('/login', (req, res) => {
-    const scope = 'user:read:email'; // Define the scope
-    console.log(`Redirecting to Twitch: https://id.twitch.tv/oauth2/authorize?client_id=${TWITCH_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=${scope}`);
-    res.redirect(`https://id.twitch.tv/oauth2/authorize?client_id=${TWITCH_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=${scope}`);
-});
-
-app.post('/auth/twitch/callback', async (req, res) => {
-    const { code } = req.body;
-
-    if (!code) {
-        return res.status(400).json({ error: 'Authorization code is required' });
-    }
-
-    try {
-        // Exchange the code for an access token
-        const tokenResponse = await axios.post('https://id.twitch.tv/oauth2/token', null, {
-            params: {
-                client_id: TWITCH_CLIENT_ID,
-                client_secret: TWITCH_CLIENT_SECRET,
-                code,
-                grant_type: 'authorization_code',
-                redirect_uri: REDIRECT_URI, // Match the frontend URL
-            },
-        });
-
-        const accessToken = tokenResponse.data.access_token;
-
-        // Fetch user information from Twitch
-        const userResponse = await axios.get('https://api.twitch.tv/helix/users', {
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-                'Client-ID': TWITCH_CLIENT_ID,
-            },
-        });
-
-        const userData = userResponse.data.data[0];
-        console.log("User Data:", userData);
-
-        // Save user to the database
-        db.run(
-            `INSERT INTO users (id, login, display_name, profile_image_url) VALUES (?, ?, ?, ?)
-             ON CONFLICT(id) DO UPDATE SET
-             login = excluded.login,
-             display_name = excluded.display_name,
-             profile_image_url = excluded.profile_image_url`,
-            [userData.id, userData.login, userData.display_name, userData.profile_image_url],
-            (err) => {
-                if (err) {
-                    console.error('Error saving user:', err.message);
-                }
-            }
-        );
-
-        // Redirect to the frontend with token and user ID
-        const frontendRedirect = `${REDIRECT_URI}?token=${accessToken}&user_id=${userData.id}`;
-        console.log("Redirecting to frontend:", frontendRedirect);
-        res.redirect(frontendRedirect);
-    } catch (error) {
-        console.error('Error during OAuth callback:', error.response?.data || error.message);
-        res.status(500).json({ error: 'Failed to authenticate', details: error.response?.data || error.message });
-    }
-});
-
-app.get('/health', (req, res) => {
-    db.get('SELECT 1', [], (err) => {
-        if (err) {
-            return res.status(500).json({ status: 'error', message: 'Database connection failed' });
-        }
-
-        res.status(200).json({ status: 'healthy', message: 'Server is running and database is connected' });
-    });
-});
-
-// Protected Routes
-app.get('/collection/:user_id', authenticate, (req, res) => {
-    const { user_id } = req.params;
-
-    const query = `
-        SELECT DISTINCT card_name, rarity
-        FROM pulls
-        WHERE user_id = ?
-        ORDER BY rarity DESC, card_name ASC
-    `;
-
-    db.all(query, [user_id], (err, rows) => {
-        if (err) {
-            console.error('Error fetching collection:', err.message);
-            return res.status(500).json({ error: 'Failed to fetch collection' });
-        }
-
-        res.json(rows);
-    });
-});
-
-app.post('/pulls', authenticate, (req, res) => {
+// API endpoint to log a card pull
+app.post('/pulls', (req, res) => {
     const { user_id, card_name, rarity } = req.body;
 
     if (!user_id || !card_name || !rarity) {
@@ -207,8 +65,78 @@ app.post('/pulls', authenticate, (req, res) => {
     });
 });
 
+
+// API endpoint to fetch all pulls
+app.get('/pulls', (req, res) => {
+  const query = `SELECT * FROM pulls`;
+  db.all(query, [], (err, rows) => {
+    if (err) {
+      console.error('Error fetching data:', err.message);
+      return res.status(500).json({ error: 'Failed to fetch pulls' });
+    }
+
+    res.json(rows);
+  });
+});
+
+app.get('/collection/:user_id', (req, res) => {
+    const { user_id } = req.params;
+
+    const query = `
+        SELECT DISTINCT card_name, rarity
+        FROM pulls
+        WHERE user_id = ?
+        ORDER BY rarity DESC, card_name ASC
+    `;
+
+    db.all(query, [user_id], (err, rows) => {
+        if (err) {
+            console.error('Error fetching collection:', err.message);
+            return res.status(500).json({ error: 'Failed to fetch collection' });
+        }
+
+        res.json(rows);
+    });
+});
+
+app.get('/analytics/top-cards', (req, res) => {
+    const query = `
+        SELECT card_name, COUNT(*) AS pulls
+        FROM pulls
+        GROUP BY card_name
+        ORDER BY pulls DESC
+        LIMIT 10
+    `;
+
+    db.all(query, [], (err, rows) => {
+        if (err) {
+            console.error('Error fetching top cards:', err.message);
+            return res.status(500).json({ error: 'Failed to fetch top cards' });
+        }
+
+        res.json(rows);
+    });
+});
+
+app.get('/analytics/rarity-distribution', (req, res) => {
+    const query = `
+        SELECT rarity, COUNT(*) AS pulls
+        FROM pulls
+        GROUP BY rarity
+        ORDER BY pulls DESC
+    `;
+
+    db.all(query, [], (err, rows) => {
+        if (err) {
+            console.error('Error fetching rarity distribution:', err.message);
+            return res.status(500).json({ error: 'Failed to fetch rarity distribution' });
+        }
+
+        res.json(rows);
+    });
+});
+
 // Start the server
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-    console.log(`OAuth Redirect URI: ${REDIRECT_URI}`);
+  console.log(`Server is running on port ${PORT}`);
 });
